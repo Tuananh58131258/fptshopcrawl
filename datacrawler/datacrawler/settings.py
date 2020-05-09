@@ -9,10 +9,7 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'datacrawler'
 
-SPIDER_MODULES = ['datacrawler.spiders']
-NEWSPIDER_MODULE = 'datacrawler.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -88,3 +85,19 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+
+ITEM_PIPELINES ={
+    'scrapy_mysql_pipeline.MySQLPipeline':300,
+}
+BOT_NAME = 'datacrawler'
+
+SPIDER_MODULES = ['datacrawler.spiders']
+NEWSPIDER_MODULE = 'datacrawler.spiders'
+
+MYSQL_HOST = 'localhost'
+MYSQL_DB = 'TGDD'
+MYSQL_TABLE = 'DienThoai'
+MYSQL_USER = 'root'
+MYSQL_PASSWORD = '1649'
+MYSQL_PORT = 3306

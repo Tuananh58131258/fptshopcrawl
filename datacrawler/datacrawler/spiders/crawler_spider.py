@@ -6,58 +6,104 @@ class CrawlerSpider(Spider):
     name = "datacrawler"
     allowed_domains = ["fptshop.com.vn"]
     start_urls = [
+        "https://fptshop.com.vn/dien-thoai/samsung",
+        "https://fptshop.com.vn/dien-thoai/oppo",
         "https://fptshop.com.vn/dien-thoai/apple-iphone",
+        "https://fptshop.com.vn/dien-thoai/vsmart",
+        "https://fptshop.com.vn/dien-thoai/xiaomi",
+        "https://fptshop.com.vn/dien-thoai/realme",
+        "https://fptshop.com.vn/dien-thoai/vivo",
+        "https://fptshop.com.vn/dien-thoai/nokia",
+        "https://fptshop.com.vn/dien-thoai/huawei",
+        "https://fptshop.com.vn/dien-thoai/masstel",
+        "https://fptshop.com.vn/dien-thoai/itel",
+        "https://fptshop.com.vn/dien-thoai/energizer",
     ]
 
     def parse(self, response):
-        san_pham = response.xpath('/html/body/section/div/div[2]/div[2]/div[3]/div')
+        page = response.css('body > section > div > div.fs-ctf-row.clearfix > div.fs-ctf-cr > div.f-cmtpaging > a::attr(data-page)').getall()
+        if page:
+            fp = int(page[0])
+            lp = int(page[1]) + 1
+            for i in range (fp,lp):
+                customurl = response.url+'?sort=ban-chay-nhat&trang='+ str(i)
+                yield scrapy.Request(customurl,callback=self.praseurl)        
+        else:
+            san_pham = response.css('body > section > div > div.fs-ctf-row.clearfix > div.fs-ctf-cr > div.fs-carow.clearfix.fs-row4phone.viewgrid > div >a::attr(href)').getall()
+            base_url = "https://fptshop.com.vn/"
+        # items = DatacrawlerItem()
+            for item in san_pham:
+            # items['ten'] = item
+            # yield items
+                link = base_url + item
+                yield scrapy.Request(link, callback=self.crawldata)
+            
+    def praseurl(self, response):
+        san_pham = response.css('body > section > div > div.fs-ctf-row.clearfix > div.fs-ctf-cr > div.fs-carow.clearfix.fs-row4phone.viewgrid > div >a::attr(href)').getall()
         base_url = "https://fptshop.com.vn/"
-        for item in san_pham[1:]:
-            ten_dien_thoai = item.xpath('a/@href').get()
-            link = base_url + ten_dien_thoai
+        # items = DatacrawlerItem()
+        for item in san_pham:
+            # items['ten'] = item
+            # yield items
+            link = base_url + item
             yield scrapy.Request(link, callback=self.crawldata)
 
     def crawldata(self, response):
-        data = response.xpath('/html/body/div[7]/div/div/div[2]')
         items = DatacrawlerItem()
-        items['cong_nghe_man_hinh'] = data.xpath('ul/li[2]/span/a/text()').extract_first()
-        items['mau_man_hinh'] = data.xpath('ul/li[2]/span/a/text()').extract_first()
-        items['chuan_man_hinh'] = data.xpath('ul/li[4]/span/text()').extract_first()
-        items['do_phan_giai_man_hinh'] = data.xpath('ul/li[5]/span/text()').extract_first()
-        items['kich_thuoc_man_hinh'] = data.xpath('ul/li[6]/span/text()').extract_first()
-        items['do_phan_giai_cam_truoc'] = data.xpath('ul/li[9]/span/text()').extract_first()
-        items['thong_tin_cam_truoc'] = data.xpath('ul/li[10]/span/text()').extract_first()
-        items['do_phan_giai_cam_sau'] = data.xpath('ul/li[12]/span/text()').extract_first()
-        items['quay_phim'] = data.xpath('ul/li[13]/span/text()').extract_first()
-        items['den_flash'] = data.xpath('ul/li[14]/span/text()').extract_first()
-        items['chup_anh_nang_cao'] = data.xpath('ul/li[15]/span/text()').extract_first()
-        items['toc_do_cpu'] = data.xpath('ul/li[17]/span/text()').extract_first()
-        items['so_nhan'] = data.xpath('ul/li[18]/span/text()').extract_first()
-        items['chipset'] = data.xpath('ul/li[19]/span/text()').extract_first()
-        items['ram'] = data.xpath('ul/li[20]/span/text()').extract_first()
-        items['gpu'] = data.xpath('ul/li[21]/span/text()').extract_first()
-        items['cam_bien'] = data.xpath('ul/li[22]/span/text()').extract_first()
-        items['danh_ba_luu_tru'] = data.xpath('ul/li[24]/span/text()').extract_first()
-        items['rom'] = data.xpath('ul/li[25]/span/text()').extract_first()
-        items['bo_nho_con_lai'] = data.xpath('ul/li[26]/span/text()').extract_first()
-        items['the_nho_ngoai'] = data.xpath('ul/li[27]/span/text()').extract_first()
-        items['ho_tro_the_nho_toi_da'] = data.xpath('ul/li[28]/span/text()').extract_first()
-        items['kieu_dang'] = data.xpath('ul/li[30]/span/text()').extract_first()
-        items['kich_thuoc'] = data.xpath('ul/li[32]/span/text()').extract_first()
-        items['trong_luong'] = data.xpath('ul/li[33]/span/text()').extract_first()
-        items['kha_nang_chong_nuoc'] = data.xpath('ul/li[34]/span/text()').extract_first()
-        items['loai_pin'] = data.xpath('ul/li[36]/span/text()').extract_first()
-        items['dung_luong_pin'] = data.xpath('ul/li[37]/span/text()').extract_first()
-        items['pin_co_the_thao_roi'] = data.xpath('ul/li[38]/span/text()').extract_first()
-        items['che_do_sac_nhanh'] = data.xpath('ul/li[39]/span/text()').extract_first()
-        items['loai_sim'] = data.xpath('ul/li[41]/span/text()').extract_first()
-        items['khe_cam_sim'] = data.xpath('ul/li[42]/span/text()').extract_first()
-        items['wifi'] = data.xpath('ul/li[43]/span/text()').extract_first()
-        items['gps'] = data.xpath('ul/li[44]/span/text()').extract_first()
-        items['bluetooth'] = data.xpath('ul/li[45]/span/text()').extract_first()
-        items['gprs_edge'] = data.xpath('ul/li[46]/span/text()').extract_first()
-        items['nfc'] = data.xpath('ul/li[47]/span/text()').extract_first()
-        items['cong_sac'] = data.xpath('ul/li[48]/span/text()').extract_first()
-        items['jack_ioput'] = data.xpath('ul/li[49]/span/text()').extract_first()
-        items['he_dieu_hanh'] = data.xpath('ul/li[65]/span/text()').extract_first()
-        yield items
+        items['ten'] = response.xpath('/html/body/section/div/div[1]/div[1]/div/h1/text()').extract_first()
+        items['url_img'] = response.xpath('/html/body/section/div/div[1]/div[2]/div[1]/div[1]//a[1]/@href').extract_first()
+        items['cong_nghe_man_hinh'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(2) > span *::text').extract_first()
+        items['mau_man_hinh'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(3) > span *::text').extract_first()
+        items['chuan_man_hinh'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(4) > span *::text').extract_first()
+        items['do_phan_giai_man_hinh'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(5) > span *::text').extract_first()
+        items['kich_thuoc_man_hinh'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(6) > span *::text').extract_first()
+        items['mat_man_hinh'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(7) > span *::text').extract_first()
+        items['do_phan_giai_cam_truoc'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(9) > span *::text').extract_first()
+        items['thong_tin_cam_truoc'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(10) > span *::text').extract_first()
+        items['do_phan_giai_cam_sau'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(12) > span *::text').extract_first()
+        items['quay_phim'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(13) > span *::text').extract_first()
+        items['den_flash'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(14) > span *::text').extract_first()
+        items['chup_anh_nang_cao'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(15) > span *::text').extract_first()
+        items['toc_do_cpu'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(17) > span *::text').extract_first()
+        items['so_nhan'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(18) > span *::text').extract_first()
+        items['chipset'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(19) > span *::text').extract_first()
+        items['ram'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(20) > span *::text').extract_first()
+        items['gpu'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(21) > span *::text').extract_first()
+        items['cam_bien'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(22) > span *::text').extract_first()
+        items['danh_ba_luu_tru'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(24) > span *::text').extract_first()
+        items['rom'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(25) > span *::text').extract_first()
+        items['bo_nho_con_lai'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(26) > span *::text').extract_first()
+        items['the_nho_ngoai'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(27) > span *::text').extract_first()
+        items['ho_tro_the_nho_toi_da'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(28) > span *::text').extract_first()
+        items['kieu_dang'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(30) > span *::text').extract_first()
+        items['chat_lieu'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(31) > span *::text').extract_first()
+        items['kich_thuoc'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(32) > span *::text').extract_first()
+        items['trong_luong'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(33) > span *::text').extract_first()
+        items['kha_nang_chong_nuoc'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(34) > span *::text').extract_first()
+        items['loai_pin'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(36) > span *::text').extract_first()
+        items['dung_luong_pin'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(37) > span *::text').extract_first()
+        items['pin_co_the_thao_roi'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(38) > span *::text').extract_first()
+        items['che_do_sac_nhanh'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(39) > span *::text').extract_first()
+        items['loai_sim'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(41) > span *::text').extract_first()
+        items['khe_cam_sim'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(42) > span *::text').extract_first()
+        items['wifi'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(43) > span *::text').extract_first()
+        items['gps'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(44) > span *::text').extract_first()
+        items['bluetooth'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(45) > span *::text').extract_first()
+        items['gprs_edge'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(46) > span *::text').extract_first()
+        items['nfc'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(47) > span *::text').extract_first()
+        items['cong_sac'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(48) > span *::text').extract_first()
+        items['jack_ioput'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(49) > span *::text').extract_first()
+        items['xem_phim'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(51) > span *::text').extract_first()
+        items['nghe_nhac'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(52) > span *::text').extract_first()
+        items['ghi_am'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(53) > span *::text').extract_first()
+        items['FM_radio'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(54) > span *::text').extract_first()
+        items['den_pin'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(55) > span *::text').extract_first()
+        items['chuc_nang_khac'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(56) > span *::text').extract_first()
+        items['thoi_gian_bao_hanh'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(58) > span *::text').extract_first()
+        items['xuat_xu'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(60) > span *::text').extract_first()
+        items['nam_san_xuat'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(61) > span *::text').extract_first()
+        items['model_series'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(63) > span *::text').extract_first()
+        items['he_dieu_hanh'] = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(65) > span *::text').extract_first()
+        if items['ten']:
+            yield items
+#PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(28) > span

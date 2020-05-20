@@ -96,7 +96,7 @@ SPIDER_MODULES = ['datacrawler.spiders']
 NEWSPIDER_MODULE = 'datacrawler.spiders'
 
 MYSQL_HOST = 'localhost'
-MYSQL_DB = 'TGDD'
+MYSQL_DB = 'FPTShop'
 MYSQL_TABLE = 'DienThoai'
 MYSQL_USER = 'root'
 MYSQL_PASSWORD = '1649'

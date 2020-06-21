@@ -1,6 +1,7 @@
 from scrapy import Spider
 from scrapy.selector import Selector
 from datacrawler.items import DatacrawlerItem
+from datacrawler.stmm import returnitem
 import scrapy
 class CrawlerSpider(Spider):
     name = "datacrawler"
@@ -55,23 +56,21 @@ class CrawlerSpider(Spider):
         urlimg = response.xpath('/html/body/section/div/div[1]/div[2]/div[1]/div[1]//a[1]/@href').extract_first()
         items['url_img'] = "https:"+str(urlimg)
         label = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li > label ::text').getall()
-        temp_label = ""
-        for item in label:
-            item.strip(" ").strip('\n')
-            temp_label = temp_label + item + "/"
-        items['label'] = temp_label
+        
         data = response.css('#PopTSKTLT > div > div > div.modal-body > ul > li > span ::text').getall()
-        temp_data = ""
-        for item in data:
-            item.strip(" ").strip('\n')
-            temp_data = temp_data + item + "/"
-        items['data'] = temp_data
-        n = len(data)
-        for i in range(0,n):
-            if label[i].find("ROM") >-1:
-                items['rom'] = data[i]
-            if label[i].find("RAM") >-1:
-                items['ram'] = data[i]
+        index = ""
+        for i in range(0,len(label)-1):
+            temp = str(label[i]).strip('\n').replace(" :","").strip(' ')
+            if temp == "Độ phân giải" and (label[i+1].find("Quay phim") != -1 or label[i+2].find("Quay phim") != -1):
+                index = "do_phan_giai_cam_sau"
+            elif temp == "Độ phân giải" and (label[i+1].find("Quay phim") == -1 or label[i+2].find("Quay phim") ==-1): 
+                index = "do_phan_giai_cam_truoc"
+            else: index = returnitem(temp)
+            temp_data = str(data[i]).strip(' ').strip('\n')
+            if temp_data and temp_data.find("None") == -1:
+                items[index] = temp_data
+            else: items[index] = "Không"
+
         gia_cu = response.css('body > section > div > div.fs-dtprodif.fs-dtbox > div.fs-dtbott > div.fs-dtckr > p.fs-dt-mtlis > a > strong > i::text').get()
         items['gia_cu'] = str(gia_cu).replace(".","").strip("₫")
         if response.css('body > section > div > div.fs-dtprodif.fs-dtbox > div.fs-dtbott > div.fs-dtinfo > div.fs-pr-box > p ::text').get():
@@ -98,6 +97,25 @@ class CrawlerSpider(Spider):
                 else:
                     temp_km = temp_km + item
         items['khuyen_mai'] = temp_km
-        if items['ten'] and items['ten'].find("Đồng hồ") == -1:
+        temp_box = response.css('body > section > div > div.fs-dtprodif.fs-dtbox > div.fs-dtbott > div.fs-dtckr > div.fs-trhcj.fancybox-access-box::text').get()
+        if temp_box:
+            items['box'] = str(temp_box).strip('\r\n').strip(" ")
+        else:
+            items['box'] = "không"
+        if response.xpath('/html/body/section/div/div[1]/div[1]/div[1]/p/text()').get():
+            temp_ghi_chu = response.xpath('/html/body/section/div/div[1]/div[1]/div[1]/p/text()').get()
+            items['ghi_chu'] = str(temp_ghi_chu).strip("(").strip(")")
+        else: items['ghi_chu'] = "không"
+        temp_tra_gop = ""
+        if response.xpath('/html/body/section/div/div[1]/div[2]/div[2]/ul/li[2]/a/@href').get():
+            temp_tra_gop = response.xpath('/html/body/section/div/div[1]/div[2]/div[2]/ul/li[2]/a/@href').get()
+        elif response.xpath('/html/body/section/div/div[1]/div[2]/div[2]/ul[2]/li[2]/a/@href').get():
+            temp_tra_gop = response.xpath('/html/body/section/div/div[1]/div[2]/div[2]/ul[2]/li[2]/a/@href').get()
+        else: temp_tra_gop = "không"
+        if temp_tra_gop != "không":
+            items['url_installment'] = "https:{}".format(temp_tra_gop)
+        else:items['url_installment'] = temp_tra_gop
+        if items['ten'] and items['ten'].find("Đồng hồ") == -1 and items['ten'].find('Watch') == -1:
             yield items
 #PopTSKTLT > div > div > div.modal-body > ul > li:nth-child(28) > span
+# scrapy crawl datacrawler
